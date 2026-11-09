@@ -1,0 +1,8 @@
+node_modules
+vendor
+.git
+.env
+.phpunit.cache
+portfolio
+surat-untuk-vio
+storage/*.key
