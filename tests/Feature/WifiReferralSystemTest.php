@@ -294,3 +294,65 @@ test('user can login using email address', function (): void {
     expect(auth()->check())->toBeTrue();
     expect(auth()->user()->isAdmin())->toBeTrue();
 });
+
+test('admin can create new referrer account through monitoring panel', function (): void {
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->set('activeTab', 'referrers')
+        ->call('openCreateReferrerModal')
+        ->assertSet('showReferrerModal', true)
+        ->set('referrerName', 'Eko Prasetyo')
+        ->set('referrerEmail', 'eko@sales.id')
+        ->set('referrerPhone', '081299900011')
+        ->set('referrerCode', 'EKO2026')
+        ->set('referrerBankInfo', 'BCA - 123456789 a.n Eko')
+        ->set('referrerPassword', 'password123')
+        ->call('saveReferrer')
+        ->assertHasNoErrors()
+        ->assertSet('showReferrerModal', false);
+
+    $user = User::where('email', 'eko@sales.id')->first();
+    expect($user)->not->toBeNull();
+    expect($user->role)->toBe('referrer');
+    expect($user->referral_code)->toBe('EKO2026');
+    expect($user->phone)->toBe('081299900011');
+});
+
+test('admin can edit existing referrer account through monitoring panel', function (): void {
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->call('openEditReferrerModal', $this->referrer->id)
+        ->assertSet('showReferrerModal', true)
+        ->assertSet('referrerName', 'Budi Sales')
+        ->set('referrerName', 'Budi Santoso Baru')
+        ->set('referrerPhone', '081234567899')
+        ->set('referrerBankInfo', 'Mandiri - 9988776655')
+        ->call('saveReferrer')
+        ->assertHasNoErrors()
+        ->assertSet('showReferrerModal', false);
+
+    $this->referrer->refresh();
+    expect($this->referrer->name)->toBe('Budi Santoso Baru');
+    expect($this->referrer->phone)->toBe('081234567899');
+    expect($this->referrer->bank_info)->toBe('Mandiri - 9988776655');
+});
+
+test('admin can delete referrer account through monitoring panel', function (): void {
+    $tempReferrer = User::create([
+        'name' => 'Mitra Hapus',
+        'email' => 'hapus@sales.id',
+        'phone' => '089900112233',
+        'role' => 'referrer',
+        'referral_code' => 'HAPUS123',
+        'password' => bcrypt('password'),
+    ]);
+
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->call('confirmDeleteReferrer', $tempReferrer->id)
+        ->assertSet('showDeleteReferrerModal', true)
+        ->call('deleteReferrer')
+        ->assertSet('showDeleteReferrerModal', false);
+
+    expect(User::find($tempReferrer->id))->toBeNull();
+});

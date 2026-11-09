@@ -8,6 +8,7 @@ use App\Models\WifiRegistration;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -48,6 +49,29 @@ class Monitoring extends Component
     public ?string $editLongitude = null;
 
     public ?string $toastMessage = null;
+
+    // Referrer CRUD Modal State
+    public bool $showReferrerModal = false;
+
+    public ?int $editingReferrerId = null;
+
+    public string $referrerName = '';
+
+    public string $referrerEmail = '';
+
+    public string $referrerPhone = '';
+
+    public string $referrerCode = '';
+
+    public string $referrerBankInfo = '';
+
+    public string $referrerPassword = '';
+
+    public bool $showDeleteReferrerModal = false;
+
+    public ?int $deletingReferrerId = null;
+
+    public ?string $deletingReferrerName = null;
 
     // Referrers tab search
     public string $referrerSearch = '';
@@ -158,6 +182,133 @@ class Monitoring extends Component
 
         $this->loadDropdownData();
         $this->toastMessage = "Status paket {$pkg->name} berhasil diperbarui.";
+    }
+
+    public function openCreateReferrerModal(): void
+    {
+        $this->resetReferrerForm();
+        $this->showReferrerModal = true;
+    }
+
+    public function openEditReferrerModal(int $id): void
+    {
+        $referrer = User::where('role', 'referrer')->findOrFail($id);
+
+        $this->editingReferrerId = $referrer->id;
+        $this->referrerName = $referrer->name;
+        $this->referrerEmail = $referrer->email;
+        $this->referrerPhone = $referrer->phone ?? '';
+        $this->referrerCode = $referrer->referral_code ?? '';
+        $this->referrerBankInfo = $referrer->bank_info ?? '';
+        $this->referrerPassword = '';
+
+        $this->showReferrerModal = true;
+    }
+
+    public function saveReferrer(): void
+    {
+        $id = $this->editingReferrerId;
+
+        $rules = [
+            'referrerName' => ['required', 'string', 'max:255'],
+            'referrerEmail' => ['required', 'string', 'email', 'max:255', 'unique:users,email'.($id ? ",{$id}" : '')],
+            'referrerPhone' => ['required', 'string', 'max:30', 'unique:users,phone'.($id ? ",{$id}" : '')],
+            'referrerCode' => ['nullable', 'string', 'max:30', 'unique:users,referral_code'.($id ? ",{$id}" : '')],
+            'referrerBankInfo' => ['nullable', 'string', 'max:255'],
+            'referrerPassword' => ['nullable', 'string', 'min:6'],
+        ];
+
+        $this->validate($rules, [
+            'referrerName.required' => 'Nama lengkap wajib diisi.',
+            'referrerEmail.required' => 'Email wajib diisi.',
+            'referrerEmail.email' => 'Format email tidak valid.',
+            'referrerEmail.unique' => 'Email ini sudah terdaftar oleh pengguna lain.',
+            'referrerPhone.required' => 'Nomor HP wajib diisi.',
+            'referrerPhone.unique' => 'Nomor HP ini sudah digunakan.',
+            'referrerCode.unique' => 'Kode referral ini sudah digunakan.',
+            'referrerPassword.min' => 'Password minimal 6 karakter.',
+        ]);
+
+        $code = ! empty(trim($this->referrerCode))
+            ? strtoupper(trim($this->referrerCode))
+            : User::generateUniqueReferralCode($this->referrerName);
+
+        if ($id) {
+            $referrer = User::where('role', 'referrer')->findOrFail($id);
+            $referrer->name = $this->referrerName;
+            $referrer->email = $this->referrerEmail;
+            $referrer->phone = $this->referrerPhone;
+            $referrer->referral_code = $code;
+            $referrer->bank_info = $this->referrerBankInfo;
+
+            if (! empty(trim($this->referrerPassword))) {
+                $referrer->password = Hash::make($this->referrerPassword);
+            }
+
+            $referrer->save();
+            $this->toastMessage = "Akun pembawa pelanggan {$referrer->name} berhasil diperbarui.";
+        } else {
+            $password = ! empty(trim($this->referrerPassword)) ? $this->referrerPassword : 'password';
+
+            $referrer = User::create([
+                'name' => $this->referrerName,
+                'email' => $this->referrerEmail,
+                'phone' => $this->referrerPhone,
+                'referral_code' => $code,
+                'bank_info' => $this->referrerBankInfo,
+                'role' => 'referrer',
+                'password' => Hash::make($password),
+            ]);
+
+            $this->toastMessage = "Akun pembawa pelanggan {$referrer->name} (Kode: {$code}) berhasil dibuat.";
+        }
+
+        $this->showReferrerModal = false;
+        $this->resetReferrerForm();
+        $this->loadDropdownData();
+    }
+
+    public function confirmDeleteReferrer(int $id): void
+    {
+        $referrer = User::where('role', 'referrer')->findOrFail($id);
+        $this->deletingReferrerId = $referrer->id;
+        $this->deletingReferrerName = $referrer->name;
+        $this->showDeleteReferrerModal = true;
+    }
+
+    public function deleteReferrer(): void
+    {
+        if (! $this->deletingReferrerId) {
+            return;
+        }
+
+        $referrer = User::where('role', 'referrer')->findOrFail($this->deletingReferrerId);
+        $name = $referrer->name;
+        $referrer->delete();
+
+        $this->showDeleteReferrerModal = false;
+        $this->deletingReferrerId = null;
+        $this->deletingReferrerName = null;
+        $this->toastMessage = "Akun pembawa pelanggan {$name} berhasil dihapus.";
+        $this->loadDropdownData();
+    }
+
+    public function closeReferrerModal(): void
+    {
+        $this->showReferrerModal = false;
+        $this->resetReferrerForm();
+    }
+
+    public function resetReferrerForm(): void
+    {
+        $this->editingReferrerId = null;
+        $this->referrerName = '';
+        $this->referrerEmail = '';
+        $this->referrerPhone = '';
+        $this->referrerCode = '';
+        $this->referrerBankInfo = '';
+        $this->referrerPassword = '';
+        $this->resetErrorBag();
     }
 
     public function render(): View

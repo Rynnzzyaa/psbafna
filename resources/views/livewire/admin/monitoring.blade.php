@@ -286,16 +286,27 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Leaderboard & Performa Pembawa Pelanggan (Mitra)</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Pantau jumlah pelanggan yang dibawa oleh masing-masing agen, konversi pemasangan, dan hak komisi</p>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Manajemen & Leaderboard Pembawa Pelanggan (Mitra)</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Kelola akun pembawa pelanggan (CRUD), pantau performa registrasi, konversi pemasangan, dan hak komisi</p>
                 </div>
 
-                <input 
-                    wire:model.live.debounce.300ms="referrerSearch" 
-                    type="text" 
-                    placeholder="Cari nama / kode referral..." 
-                    class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-64"
-                >
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <button 
+                        wire:click="openCreateReferrerModal" 
+                        class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span>Tambah Mitra Baru</span>
+                    </button>
+
+                    <input 
+                        wire:model.live.debounce.300ms="referrerSearch" 
+                        type="text" 
+                        placeholder="Cari nama / kode referral..." 
+                        class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 w-full sm:w-56"
+                    >
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -305,10 +316,11 @@
                             <th class="py-3 px-4 rounded-l-xl">Nama Mitra</th>
                             <th class="py-3 px-4">Kode Referral</th>
                             <th class="py-3 px-4">Kontak / Bank</th>
-                            <th class="py-3 px-4 text-center">Total Pelanggan Dibawa</th>
-                            <th class="py-3 px-4 text-center">Sukses Terpasang</th>
-                            <th class="py-3 px-4 text-center">Konversi (%)</th>
-                            <th class="py-3 px-4 rounded-r-xl">Total Komisi</th>
+                            <th class="py-3 px-4 text-center">Total Pelanggan</th>
+                            <th class="py-3 px-4 text-center">Terpasang</th>
+                            <th class="py-3 px-4 text-center">Konversi</th>
+                            <th class="py-3 px-4">Total Komisi</th>
+                            <th class="py-3 px-4 text-center rounded-r-xl">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -319,7 +331,7 @@
                             <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
                                 <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                                     <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                                        <div class="w-8 h-8 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-xs">
                                             {{ $ref->initials() }}
                                         </div>
                                         <div>
@@ -329,7 +341,7 @@
                                     </div>
                                 </td>
                                 <td class="py-3.5 px-4">
-                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800">
+                                    <span class="font-mono font-bold text-amber-400 px-2.5 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30">
                                         {{ $ref->referral_code }}
                                     </span>
                                 </td>
@@ -344,17 +356,37 @@
                                     {{ $ref->total_installed }}
                                 </td>
                                 <td class="py-3.5 px-4 text-center">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $conversionRate >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700' }}">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $conversionRate >= 50 ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }}">
                                         {{ $conversionRate }}%
                                     </span>
                                 </td>
-                                <td class="py-3.5 px-4 font-bold text-indigo-600 dark:text-indigo-400 text-sm">
+                                <td class="py-3.5 px-4 font-bold text-amber-400 text-sm">
                                     Rp {{ number_format($ref->total_commission ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="py-3.5 px-4 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button 
+                                            wire:click="openEditReferrerModal({{ $ref->id }})" 
+                                            class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 transition cursor-pointer"
+                                            title="Edit Akun Mitra">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button 
+                                            wire:click="confirmDeleteReferrer({{ $ref->id }})" 
+                                            class="p-2 rounded-lg bg-slate-100 hover:bg-rose-100 dark:bg-slate-800 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 transition cursor-pointer"
+                                            title="Hapus Akun Mitra">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-slate-400">
+                                <td colspan="8" class="py-8 text-center text-slate-400">
                                     Tidak ada data pembawa pelanggan yang ditemukan.
                                 </td>
                             </tr>
@@ -485,6 +517,119 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- MODAL TAMBAH / EDIT AKUN PEMBAWA PELANGGAN (MITRA) -->
+    @if ($showReferrerModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative my-8">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-5">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+                            {{ $editingReferrerId ? 'Edit Akun Pembawa Pelanggan' : 'Tambah Pembawa Pelanggan Baru' }}
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                            {{ $editingReferrerId ? 'Perbarui data profil, kontak, kode referral, atau password mitra' : 'Daftarkan mitra pembawa pelanggan baru agar bisa langsung login dan menyebarkan referral' }}
+                        </p>
+                    </div>
+                    <button wire:click="closeReferrerModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form wire:submit="saveReferrer" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                            Nama Lengkap <span class="text-rose-500">*</span>
+                        </label>
+                        <input wire:model="referrerName" type="text" placeholder="Contoh: Ahmad Fauzi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        @error('referrerName') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                Alamat Email <span class="text-rose-500">*</span>
+                            </label>
+                            <input wire:model="referrerEmail" type="email" placeholder="ahmad@email.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            @error('referrerEmail') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                Nomor HP / WhatsApp <span class="text-rose-500">*</span>
+                            </label>
+                            <input wire:model="referrerPhone" type="text" placeholder="08123456789" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            @error('referrerPhone') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                Kode Referral
+                            </label>
+                            <input wire:model="referrerCode" type="text" placeholder="Kosongkan untuk otomatis" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm uppercase font-mono focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            <span class="text-[10px] text-slate-400 mt-0.5 block">Jika kosong, kode unik dibuat otomatis</span>
+                            @error('referrerCode') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                Password Akun
+                            </label>
+                            <input wire:model="referrerPassword" type="password" placeholder="{{ $editingReferrerId ? 'Kosongkan jika tidak diubah' : 'Default: password' }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            @error('referrerPassword') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                            Informasi Rekening / Pencairan Komisi
+                        </label>
+                        <input wire:model="referrerBankInfo" type="text" placeholder="Contoh: BCA - 8820192831 a.n Ahmad Fauzi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        @error('referrerBankInfo') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <button type="button" wire:click="closeReferrerModal" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/25 transition cursor-pointer disabled:opacity-50">
+                            <span wire:loading.remove>{{ $editingReferrerId ? 'Simpan Perubahan' : 'Tambah Mitra' }}</span>
+                            <span wire:loading>Menyimpan...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- MODAL KONFIRMASI HAPUS MITRA -->
+    @if ($showDeleteReferrerModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center">
+                <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Hapus Akun Pembawa Pelanggan?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus akun <span class="font-bold text-slate-900 dark:text-white">{{ $deletingReferrerName }}</span>? Data riwayat pelanggan yang pernah dibawanya akan tetap aman tersimpan di sistem.
+                </p>
+                <div class="flex items-center justify-center gap-3">
+                    <button wire:click="$set('showDeleteReferrerModal', false)" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button wire:click="deleteReferrer" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/25 transition cursor-pointer">
+                        Ya, Hapus Akun
+                    </button>
+                </div>
             </div>
         </div>
     @endif
