@@ -73,6 +73,27 @@ class Monitoring extends Component
 
     public ?string $deletingReferrerName = null;
 
+    // Admin Management CRUD State
+    public bool $showAdminModal = false;
+
+    public ?int $editingAdminId = null;
+
+    public string $adminName = '';
+
+    public string $adminEmail = '';
+
+    public string $adminPhone = '';
+
+    public string $adminPassword = '';
+
+    public bool $showDeleteAdminModal = false;
+
+    public ?int $deletingAdminId = null;
+
+    public ?string $deletingAdminName = null;
+
+    public string $adminSearch = '';
+
     // Referrers tab search
     public string $referrerSearch = '';
 
@@ -311,6 +332,146 @@ class Monitoring extends Component
         $this->resetErrorBag();
     }
 
+    public function openCreateAdminModal(): void
+    {
+        $this->resetAdminForm();
+        $this->showAdminModal = true;
+    }
+
+    public function openEditAdminModal(int $id): void
+    {
+        $admin = User::where('role', 'admin')->findOrFail($id);
+
+        $this->editingAdminId = $admin->id;
+        $this->adminName = $admin->name;
+        $this->adminEmail = $admin->email;
+        $this->adminPhone = $admin->phone ?? '';
+        $this->adminPassword = '';
+
+        $this->showAdminModal = true;
+    }
+
+    public function saveAdmin(): void
+    {
+        $id = $this->editingAdminId;
+
+        $rules = [
+            'adminName' => ['required', 'string', 'max:255'],
+            'adminEmail' => ['required', 'string', 'email', 'max:255', 'unique:users,email'.($id ? ",{$id}" : '')],
+            'adminPhone' => ['required', 'string', 'max:30', 'unique:users,phone'.($id ? ",{$id}" : '')],
+        ];
+
+        if (! $id) {
+            $rules['adminPassword'] = ['required', 'string', 'min:6'];
+        } else {
+            $rules['adminPassword'] = ['nullable', 'string', 'min:6'];
+        }
+
+        $this->validate($rules, [
+            'adminName.required' => 'Nama lengkap wajib diisi.',
+            'adminEmail.required' => 'Email wajib diisi.',
+            'adminEmail.email' => 'Format email tidak valid.',
+            'adminEmail.unique' => 'Email ini sudah terdaftar oleh pengguna lain.',
+            'adminPhone.required' => 'Nomor HP wajib diisi.',
+            'adminPhone.unique' => 'Nomor HP ini sudah digunakan.',
+            'adminPassword.required' => 'Password wajib diisi.',
+            'adminPassword.min' => 'Password minimal 6 karakter.',
+        ]);
+
+        if ($id) {
+            $admin = User::where('role', 'admin')->findOrFail($id);
+            $admin->name = $this->adminName;
+            $admin->email = $this->adminEmail;
+            $admin->phone = $this->adminPhone;
+
+            if (! empty(trim($this->adminPassword))) {
+                $admin->password = Hash::make($this->adminPassword);
+            }
+
+            $admin->save();
+            $this->toastMessage = "Akun administrator {$admin->name} berhasil diperbarui.";
+        } else {
+            $admin = User::create([
+                'name' => $this->adminName,
+                'email' => $this->adminEmail,
+                'phone' => $this->adminPhone,
+                'role' => 'admin',
+                'password' => Hash::make($this->adminPassword),
+            ]);
+
+            $this->toastMessage = "Akun administrator baru {$admin->name} berhasil dibuat.";
+        }
+
+        $this->showAdminModal = false;
+        $this->resetAdminForm();
+    }
+
+    public function confirmDeleteAdmin(int $id): void
+    {
+        if ($id === (int) auth()->id()) {
+            $this->toastMessage = 'Anda tidak dapat menghapus akun administrator yang sedang Anda gunakan saat ini!';
+
+            return;
+        }
+
+        if (User::where('role', 'admin')->count() <= 1) {
+            $this->toastMessage = 'Tidak dapat menghapus. Sistem harus memiliki minimal 1 akun Administrator aktif!';
+
+            return;
+        }
+
+        $admin = User::where('role', 'admin')->findOrFail($id);
+        $this->deletingAdminId = $admin->id;
+        $this->deletingAdminName = $admin->name;
+        $this->showDeleteAdminModal = true;
+    }
+
+    public function deleteAdmin(): void
+    {
+        if (! $this->deletingAdminId) {
+            return;
+        }
+
+        if ($this->deletingAdminId === (int) auth()->id()) {
+            $this->toastMessage = 'Anda tidak dapat menghapus akun administrator yang sedang Anda gunakan saat ini!';
+            $this->showDeleteAdminModal = false;
+
+            return;
+        }
+
+        if (User::where('role', 'admin')->count() <= 1) {
+            $this->toastMessage = 'Tidak dapat menghapus. Sistem harus memiliki minimal 1 akun Administrator aktif!';
+            $this->showDeleteAdminModal = false;
+
+            return;
+        }
+
+        $admin = User::where('role', 'admin')->findOrFail($this->deletingAdminId);
+        $name = $admin->name;
+        $admin->delete();
+
+        $this->showDeleteAdminModal = false;
+        $this->deletingAdminId = null;
+        $this->deletingAdminName = null;
+        $this->toastMessage = "Akun administrator {$name} berhasil dihapus dari sistem.";
+    }
+
+    public function closeAdminModal(): void
+    {
+        $this->showAdminModal = false;
+        $this->resetAdminForm();
+    }
+
+    public function resetAdminForm(): void
+    {
+        $this->editingAdminId = null;
+        $this->adminName = '';
+        $this->adminEmail = '';
+        $this->adminPhone = '';
+        $this->adminPassword = '';
+        $this->resetErrorBag();
+    }
+
     public function render(): View
     {
         // 1. Overall System KPI Metrics
@@ -384,6 +545,21 @@ class Monitoring extends Component
 
         $referrersList = $refQuery->orderByDesc('total_brought')->paginate(10, ['*'], 'refPage');
 
+        // 4. Admins Query
+        $totalAdminsCount = User::where('role', 'admin')->count();
+        $adminQuery = User::where('role', 'admin')->latest();
+
+        if (! empty(trim($this->adminSearch))) {
+            $adminTerm = '%'.trim($this->adminSearch).'%';
+            $adminQuery->where(function ($q) use ($adminTerm): void {
+                $q->where('name', 'like', $adminTerm)
+                    ->orWhere('email', 'like', $adminTerm)
+                    ->orWhere('phone', 'like', $adminTerm);
+            });
+        }
+
+        $adminsList = $adminQuery->paginate(10, ['*'], 'adminPage');
+
         return view('livewire.admin.monitoring', [
             'totalRegistrations' => $totalRegistrations,
             'pendingCount' => $pendingCount,
@@ -392,11 +568,13 @@ class Monitoring extends Component
             'installedCount' => $installedCount,
             'rejectedCount' => $rejectedCount,
             'totalReferrersCount' => $totalReferrersCount,
+            'totalAdminsCount' => $totalAdminsCount,
             'monthlyRevenue' => $monthlyRevenue,
             'totalCommissionPaid' => $totalCommissionPaid,
             'totalCommissionUnpaid' => $totalCommissionUnpaid,
             'registrations' => $registrations,
             'referrersList' => $referrersList,
+            'adminsList' => $adminsList,
         ]);
     }
 }

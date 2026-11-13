@@ -356,3 +356,77 @@ test('admin can delete referrer account through monitoring panel', function (): 
 
     expect(User::find($tempReferrer->id))->toBeNull();
 });
+
+test('admin can create new admin account through monitoring panel', function (): void {
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->set('activeTab', 'admins')
+        ->call('openCreateAdminModal')
+        ->assertSet('showAdminModal', true)
+        ->set('adminName', 'Admin Operasional')
+        ->set('adminEmail', 'ops@wifinet.id')
+        ->set('adminPhone', '081233221100')
+        ->set('adminPassword', 'secret123')
+        ->call('saveAdmin')
+        ->assertHasNoErrors()
+        ->assertSet('showAdminModal', false);
+
+    $newAdmin = User::where('email', 'ops@wifinet.id')->first();
+    expect($newAdmin)->not->toBeNull();
+    expect($newAdmin->role)->toBe('admin');
+    expect($newAdmin->phone)->toBe('081233221100');
+});
+
+test('admin can edit existing admin account', function (): void {
+    $secondAdmin = User::create([
+        'name' => 'Admin Cabang',
+        'email' => 'cabang@wifinet.id',
+        'phone' => '081255556666',
+        'role' => 'admin',
+        'password' => bcrypt('password'),
+    ]);
+
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->call('openEditAdminModal', $secondAdmin->id)
+        ->assertSet('showAdminModal', true)
+        ->assertSet('adminName', 'Admin Cabang')
+        ->set('adminName', 'Admin Regional Barat')
+        ->set('adminPhone', '081277778888')
+        ->call('saveAdmin')
+        ->assertHasNoErrors()
+        ->assertSet('showAdminModal', false);
+
+    $secondAdmin->refresh();
+    expect($secondAdmin->name)->toBe('Admin Regional Barat');
+    expect($secondAdmin->phone)->toBe('081277778888');
+});
+
+test('admin cannot delete their own logged-in account', function (): void {
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->call('confirmDeleteAdmin', $this->admin->id)
+        ->assertSet('showDeleteAdminModal', false)
+        ->assertSee('Anda tidak dapat menghapus akun administrator yang sedang Anda gunakan saat ini!');
+
+    expect(User::find($this->admin->id))->not->toBeNull();
+});
+
+test('admin can delete another admin when multiple admins exist', function (): void {
+    $secondAdmin = User::create([
+        'name' => 'Admin Hapus',
+        'email' => 'adminhapus@wifinet.id',
+        'phone' => '081244443333',
+        'role' => 'admin',
+        'password' => bcrypt('password'),
+    ]);
+
+    Livewire::actingAs($this->admin)
+        ->test(AdminMonitoring::class)
+        ->call('confirmDeleteAdmin', $secondAdmin->id)
+        ->assertSet('showDeleteAdminModal', true)
+        ->call('deleteAdmin')
+        ->assertSet('showDeleteAdminModal', false);
+
+    expect(User::find($secondAdmin->id))->toBeNull();
+});

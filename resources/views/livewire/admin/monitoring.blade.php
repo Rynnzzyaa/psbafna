@@ -104,6 +104,17 @@
 
         <button 
             type="button" 
+            wire:click="setTab('admins')" 
+            class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'admins' ? 'bg-rose-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800' }}"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            <span>Kelola Admin ({{ $totalAdminsCount }})</span>
+        </button>
+
+        <button 
+            type="button" 
             wire:click="setTab('packages')" 
             class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'packages' ? 'bg-slate-800 text-white shadow dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800' }}"
         >
@@ -401,6 +412,127 @@
         </div>
     @endif
 
+    <!-- TAB 3: KELOLA AKUN ADMIN (SUPER ADMINISTRATOR) -->
+    @if ($activeTab === 'admins')
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Manajemen Akun Administrator (Super Admin)</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Kelola akun admin yang memiliki akses penuh terhadap monitoring, instalasi teknisi, validasi komisi, dan konfigurasi sistem</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <button 
+                        wire:click="openCreateAdminModal" 
+                        class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span>Tambah Admin Baru</span>
+                    </button>
+
+                    <input 
+                        wire:model.live.debounce.300ms="adminSearch" 
+                        type="text" 
+                        placeholder="Cari nama / email admin..." 
+                        class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 w-full sm:w-56"
+                    >
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                    <thead class="text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 dark:text-slate-400 rounded-xl">
+                        <tr>
+                            <th class="py-3 px-4 rounded-l-xl">Nama Administrator</th>
+                            <th class="py-3 px-4">Kontak Login (Email / No. HP)</th>
+                            <th class="py-3 px-4">Status Akun</th>
+                            <th class="py-3 px-4">Terdaftar Sejak</th>
+                            <th class="py-3 px-4 text-center rounded-r-xl">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @forelse ($adminsList as $adm)
+                            @php
+                                $isCurrent = $adm->id === (int) auth()->id();
+                            @endphp
+                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition {{ $isCurrent ? 'bg-rose-50/30 dark:bg-rose-950/20' : '' }}">
+                                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 flex items-center justify-center font-bold text-xs">
+                                            {{ $adm->initials() }}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span>{{ $adm->name }}</span>
+                                                @if ($isCurrent)
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                                        Akun Anda
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <span class="text-[10px] text-slate-400 block font-normal">Hak Akses: Super Administrator</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="text-slate-900 dark:text-white font-medium block">{{ $adm->email }}</span>
+                                    <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">{{ $adm->phone ?? 'No HP belum diisi' }}</span>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                        Aktif
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400">
+                                    {{ $adm->created_at ? $adm->created_at->format('d M Y, H:i') : '-' }}
+                                </td>
+                                <td class="py-3.5 px-4 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button 
+                                            wire:click="openEditAdminModal({{ $adm->id }})" 
+                                            class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 transition cursor-pointer"
+                                            title="Edit Data Admin">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        @if (! $isCurrent && $totalAdminsCount > 1)
+                                            <button 
+                                                wire:click="confirmDeleteAdmin({{ $adm->id }})" 
+                                                class="p-2 rounded-lg bg-slate-100 hover:bg-rose-100 dark:bg-slate-800 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 transition cursor-pointer"
+                                                title="Hapus Akun Admin">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        @else
+                                            <span class="p-2 rounded-lg text-slate-300 dark:text-slate-700 cursor-not-allowed" title="Akun utama / akun sedang login tidak dapat dihapus">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                                </svg>
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-slate-400">
+                                    Tidak ada data administrator yang ditemukan.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pt-3">
+                {{ $adminsList->links() }}
+            </div>
+        </div>
+    @endif
+
     <!-- TAB 3: PACKAGES -->
     @if ($activeTab === 'packages')
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
@@ -628,6 +760,100 @@
                     </button>
                     <button wire:click="deleteReferrer" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/25 transition cursor-pointer">
                         Ya, Hapus Akun
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- MODAL TAMBAH / EDIT AKUN ADMINISTRATOR -->
+    @if ($showAdminModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative my-8">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-5">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+                            {{ $editingAdminId ? 'Edit Akun Administrator' : 'Tambah Administrator Baru' }}
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                            {{ $editingAdminId ? 'Perbarui data nama, email, nomor HP, atau reset password admin' : 'Daftarkan admin baru yang memiliki akses penuh terhadap sistem kontrol dan monitoring' }}
+                        </p>
+                    </div>
+                    <button wire:click="closeAdminModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form wire:submit="saveAdmin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                            Nama Lengkap Administrator <span class="text-rose-500">*</span>
+                        </label>
+                        <input wire:model="adminName" type="text" placeholder="Contoh: Admin Operasional" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        @error('adminName') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                Alamat Email <span class="text-rose-500">*</span>
+                            </label>
+                            <input wire:model="adminEmail" type="email" placeholder="admin@domain.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            @error('adminEmail') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                Nomor HP / Login <span class="text-rose-500">*</span>
+                            </label>
+                            <input wire:model="adminPhone" type="text" placeholder="0811xxxxxxxx" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            @error('adminPhone') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                            Password Akun {{ $editingAdminId ? '(Opsional - Kosongkan jika tidak diubah)' : '*' }}
+                        </label>
+                        <input wire:model="adminPassword" type="password" placeholder="{{ $editingAdminId ? 'Kosongkan jika tidak ingin mengganti password' : 'Minimal 6 karakter' }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        @error('adminPassword') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <button type="button" wire:click="closeAdminModal" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/25 transition cursor-pointer disabled:opacity-50">
+                            <span wire:loading.remove>{{ $editingAdminId ? 'Simpan Perubahan' : 'Tambah Admin' }}</span>
+                            <span wire:loading>Menyimpan...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- MODAL KONFIRMASI HAPUS ADMIN -->
+    @if ($showDeleteAdminModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center">
+                <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Hapus Akun Administrator?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus akun admin <span class="font-bold text-slate-900 dark:text-white">{{ $deletingAdminName }}</span>? Tindakan ini akan mencabut seluruh hak akses akun ini ke sistem kontrol.
+                </p>
+                <div class="flex items-center justify-center gap-3">
+                    <button wire:click="$set('showDeleteAdminModal', false)" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button wire:click="deleteAdmin" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/25 transition cursor-pointer">
+                        Ya, Hapus Admin
                     </button>
                 </div>
             </div>
