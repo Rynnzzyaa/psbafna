@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruang Cerita Nada 🕊️ — Teman Curhat &amp; Keluh Kesah</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <link rel="stylesheet" href="style.css?v=3.5">
+</head>
+<body>
+    <!-- Ambient Background Lighting -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+    <div id="heart-particles"></div>
+
+    <div class="app-container">
+        <!-- Top Status Bar -->
+        <header class="status-bar">
+            <div class="status-pill">
+                <span class="live-dot"></span>
+                <span>Agent Hermes: <strong>Siap Mendengarkan</strong> 🕊️</span>
+            </div>
+            
+            <div class="header-actions">
+                <button id="btn-ambient-sound" class="btn-icon" title="Suasana Hujan &amp; Musik Tenang">
+                    <i class="fa-solid fa-cloud-rain"></i>
+                </button>
+                <button id="btn-open-settings" class="btn-icon" title="Pengaturan Endpoint Hermes">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+                <div class="receiver-pill">
+                    Safe Space: <strong>Nada</strong> ✨
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero-sanctuary">
+            <div class="sanctuary-badge">
+                <i class="fa-solid fa-mug-saucer"></i> RUANG CURHAT &amp; KELUH KESAH NADA
+            </div>
+            <h1 class="sanctuary-title">Hai Nada, Tumpahin Semuanya di Sini ya... ✨</h1>
+            <p class="sanctuary-desc">
+                Kapan pun hari kamu lagi capek, lagi mumet, overthinking, atau lagi <strong>kangen serunya ngobrol bareng Yan</strong>, 
+                kamu punya <strong>Agent Hermes</strong> yang siap sedia nemenin kamu cerita santai 24/7.
+            </p>
+        </section>
+
+        <!-- Quick Mood Triggers -->
+        <section class="mood-section">
+            <span class="mood-title">Lagi ngerasain apa hari ini, Nada?</span>
+            <div class="mood-pills">
+                <button class="mood-pill" data-msg="Lagi kangen serunya ngobrol bareng Yan nih...">
+                    <span>☕ Kangen ngobrol bareng Yan</span>
+                </button>
+                <button class="mood-pill" data-msg="Hari ini capek dan pusing banget rasanya... 🥱">
+                    <span>🥱 Hari ini capek &amp; pusing</span>
+                </button>
+                <button class="mood-pill" data-msg="Lagi overthinking dan butuh temen dengerin cerita... 🌧️">
+                    <span>🌧️ Overthinking / Mumet</span>
+                </button>
+                <button class="mood-pill" data-msg="Gua ada cerita seru dan lucu hari ini! ✨">
+                    <span>✨ Cerita seru hari ini!</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Chat Box Container -->
+        <main class="chat-wrapper glass-panel">
+            <div class="chat-header">
+                <div class="hermes-profile">
+                    <div class="hermes-avatar">
+                        <i class="fa-solid fa-dove"></i>
+                    </div>
+                    <div>
+                        <div class="hermes-name">Agent Hermes <span class="ai-badge">AI Teman Cerita dari Yan</span></div>
+                        <div class="hermes-status" id="hermes-status-text">Online • Siap Menemani Nada</div>
+                    </div>
+                </div>
+
+                <div class="chat-header-tools">
+                    <button id="btn-clear-chat" class="tool-btn" title="Bersihkan obrolan">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages" id="chat-messages">
+                <div class="message-item bot-message">
+                    <div class="msg-avatar"><i class="fa-solid fa-dove"></i></div>
+                    <div class="msg-body">
+                        <div class="msg-sender">Hermes</div>
+                        <div class="msg-bubble">
+                            Halo Nada! ✨ Aku Hermes, AI teman ngobrol yang dibuat khusus oleh Yan buat nemenin kamu. 
+                            <br><br>
+                            Kalau kamu lagi ada beban pikiran, capek sama aktivitas hari ini, atau pengen cerita hal random, tumpahin aja semuanya ke sini ya. Ruangan ini santai dan bebas buat kamu curhat apa aja. Ada kejadian seru atau hal apa yang lagi kamu rasain hari ini?
+                        </div>
+                        <div class="msg-time">Sekarang</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator hidden" id="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <span>Hermes lagi dengerin &amp; mengetik...</span>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="chat-input-container">
+                <form id="chat-form" class="chat-form">
+                    <textarea id="chat-input" rows="1" placeholder="Ketik apa pun yang mau kamu ceritain, Nad..." autocomplete="off"></textarea>
+                    
+                    <div class="input-actions">
+                        <button type="submit" id="btn-send" class="btn-send" title="Kirim pesan">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- Special Corner from Yan (Pojok Teman Baik) -->
+        <section class="yan-corner-section">
+            <div class="section-divider">
+                <span></span>
+                <i class="fa-solid fa-sparkles"></i>
+                <span></span>
+            </div>
+
+            <div class="yan-corner-grid">
+                <!-- Polaroid Photo of Yan -->
+                <div class="corner-card glass-panel polaroid-card-box">
+                    <div class="washi-tape">📌 Dari Yan</div>
+                    <div class="polaroid-img-wrapper" id="polaroid-toggle" title="Ketuk buat ganti foto Yan!">
+                        <img src="images/yan-1.jpg" alt="Foto Yan" id="yan-photo" class="polaroid-photo">
+                        <span class="photo-index" id="photo-index">1 / 3 📸</span>
+                    </div>
+                    <div class="polaroid-caption">
+                        <p id="polaroid-quote">"Tetap semangat ya Nad! Jangan lupa istirahat ✨"</p>
+                        <small>(Ketuk fotonya buat ganti foto Yan!)</small>
+                    </div>
+                </div>
+
+                <!-- Interactive Comfort Action Box -->
+                <div class="corner-card glass-panel comfort-card">
+                    <h3 class="comfort-title"><i class="fa-solid fa-mug-hot"></i> Pojok Teman Baik</h3>
+                    <p class="comfort-desc">Butuh booster semangat atau mau colek Yan langsung? Pakai tombol ini:</p>
+
+                    <div class="comfort-buttons">
+                        <!-- Action 1: Virtual Support / Energy -->
+                        <button id="btn-virtual-hug" class="btn-comfort btn-hug">
+                            <i class="fa-solid fa-mug-hot"></i>
+                            <div>
+                                <strong>Kirim Semangat Virtual ☕✨</strong>
+                                <small>Booster energi biar nggak gampang tumbang</small>
+                            </div>
+                        </button>
+
+                        <!-- Action 2: WA Direct Link -->
+                        <a href="https://wa.me/6285878942325?text=Hai%20Yan!%20Lagi%20pengen%20ngobrol%20nih,%20lo%20lagi%20santai%20ga?" target="_blank" class="btn-comfort btn-wa">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            <div>
+                                <strong>Chat WhatsApp Yan Langsung 💬</strong>
+                                <small>Ajak Yan ngobrol atau telponan</small>
+                            </div>
+                        </a>
+
+                        <!-- Action 3: Note from Yan -->
+                        <button id="btn-open-capsule" class="btn-comfort btn-capsule">
+                            <i class="fa-solid fa-note-sticky"></i>
+                            <div>
+                                <strong>Catatan Semangat dari Yan 📝</strong>
+                                <small>Pesan buat kamu pas lagi butuh booster</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Dibuat oleh <strong>Yan</strong> sebagai ruang cerita santai untuk <strong>Nada</strong>.</p>
+            <p class="copyright">&copy; 2026 Ruang Cerita Nada &amp; Agent Hermes. Best Friends Safe Space.</p>
+        </footer>
+    </div>
+
+    <!-- MODAL 1: Note from Yan (Best Friend Support) -->
+    <div id="capsule-modal" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <button class="btn-close-modal" id="btn-close-capsule"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header-icon">
+                <i class="fa-solid fa-note-sticky"></i>
+            </div>
+            <h3 class="modal-title">Catatan dari Yan 📝</h3>
+            <div class="modal-body-content">
+                <p class="capsule-para">
+                    Hai Nad,
+                </p>
+                <p class="capsule-para">
+                    Kalau kamu lagi buka catatan ini, mungkin kamu lagi ngerasa capek, pusing sama tugas/kerjaan, atau lagi butuh jeda dari ramainya dunia ya?
+                </p>
+                <div class="capsule-highlight">
+                    "Inget ya Nad, lo udah berjuang hebat banget hari ini. Nggak apa-apa buat istirahat dulu kalau emang lagi capek. Jangan sungkan buat cerita apa pun ke gua, gua selalu siap dengerin."
+                </div>
+                <p class="capsule-para">
+                    Jaga kesehatan ya Nad, jangan sampai telat makan, dan keep smiling! Lo orang yang keren banget. ✨
+                </p>
+                <div class="capsule-sign">
+                    <span>Teman baik lo selalu,</span>
+                    <h4>Yan ✨</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Settings / Hermes Endpoint Config -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-card glass-panel settings-card">
+            <button class="btn-close-modal" id="btn-close-settings"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header-icon settings-icon">
+                <i class="fa-solid fa-sliders"></i>
+            </div>
+            <h3 class="modal-title">Pengaturan Agent Hermes ⚙️</h3>
+            <p class="settings-desc">Sesuaikan alamat port atau endpoint AI Hermes yang berjalan di laptop kamu:</p>
+            
+            <form id="settings-form" class="settings-form">
+                <div class="form-group">
+                    <label for="cfg-api-url">Endpoint URL Local Hermes:</label>
+                    <input type="text" id="cfg-api-url" value="http://127.0.0.1:8642/v1/chat/completions" placeholder="contoh: http://127.0.0.1:8642/v1/chat/completions">
+                    <small>Default Hermes Agent: Port 8642</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="cfg-model">Model Name:</label>
+                    <input type="text" id="cfg-model" value="hermes-agent" placeholder="contoh: hermes-agent">
+                </div>
+
+                <div class="form-group">
+                    <label for="cfg-wa">Nomor WhatsApp Yan:</label>
+                    <input type="text" id="cfg-wa" value="6285878942325">
+                </div>
+
+                <div class="settings-status-box" id="test-connection-status">
+                    <i class="fa-solid fa-circle-info"></i> Sistem otomatis menggunakan mode cerdas bawaan jika service lokal belum dinyalakan.
+                </div>
+
+                <div class="settings-actions">
+                    <button type="button" id="btn-test-conn" class="btn-secondary">Tes Koneksi</button>
+                    <button type="submit" class="btn-primary">Simpan Pengaturan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js?v=3.5"></script>
+</body>
+</html>
