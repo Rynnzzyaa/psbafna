@@ -1,9 +1,0 @@
-{
-  "api_url": "http://127.0.0.1:8642/v1/chat/completions",
-  "model": "hermes-agent",
-  "api_key": "e9c84f1a7b32d04e658f129c5a710b8d34e6f8219c05471a2b8e39d401f7c52a",
-  "whatsapp_number": "6285878942325",
-  "yan_name": "Yan",
-  "nada_name": "Nada",
-  "description": "Konfigurasi Agent Hermes Resmi Port 8642"
-}
